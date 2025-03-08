@@ -6,7 +6,8 @@ class Game(ABC):
     
     def __init__(self, players):
         self.board = Board()
-        self.players = players
+        self.player1 = player1
+        self.player2 = player2
 
     @abstractmethod
     def initialize_board(self):
