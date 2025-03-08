@@ -5,3 +5,6 @@ class Player:
 
     def updateScore(self, points):
         self.score += points
+
+    def __repr__(self):
+        return f"Player(name={self.name}, score={self.score})"
