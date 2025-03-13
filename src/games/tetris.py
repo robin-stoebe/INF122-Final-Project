@@ -3,6 +3,10 @@ import random
 import sys
 from typing import List, Tuple, Optional
 
+from src.engines.game import Game
+from src.engines.player import Player
+from src.engines.board import Board  # Optionally used if you want to unify boards
+
 BOARD_WIDTH = 10
 BOARD_HEIGHT = 20
 BLOCK_SIZE = 30
@@ -67,13 +71,14 @@ class TetrisPiece:
             return [(-b[1], b[0]) for b in blocks]
         return blocks
 
-class Tetris:
+class TetrisGame(Game):
     """
     A real-time Tetris game with two separate boards side-by-side in a single Pygame window.
     Player 1 uses WASD (and space to hard drop), Player 2 uses arrow keys (and RCtrl to hard drop).
     """
-    def __init__(self, player1_name: str, player2_name: str):
-        # Initialize pygame
+
+    def __init__(self, board: Board, player1: Player, player2: Player):
+        super().__init__(board, player1, player2)
         pygame.init()
         self.clock = pygame.time.Clock()
 
@@ -87,13 +92,10 @@ class Tetris:
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption("Two-Player Tetris")
 
-        # Player states
-        self.player1_name = player1_name
-        self.player2_name = player2_name
-        self.score1 = 0
-        self.score2 = 0
+        # Game states
         self.game_over1 = False
         self.game_over2 = False
+        self.running = True
 
         # Active pieces
         self.active_piece1: Optional[TetrisPiece] = None
@@ -105,83 +107,12 @@ class Tetris:
         self.drop_interval1 = DROP_INTERVAL
         self.drop_interval2 = DROP_INTERVAL
 
-        # Spawn initial pieces
+    def initialize_board(self):
         self.spawn_piece1()
         self.spawn_piece2()
 
-        self.running = True
-
-    def run(self):
-        while self.running:
-            dt = self.clock.tick(FPS) / 1000.0
-            self.handle_events()
-            self.update(dt)
-            self.render()
-
-        pygame.quit()
-        sys.exit()
-
-    # EVENT HANDLING
-    def handle_events(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-
-            elif event.type == pygame.KEYDOWN:
-                # Player 1 (WASD, space)
-                if not self.game_over1 and self.active_piece1:
-                    if event.key == pygame.K_a:  # left
-                        self.active_piece1.x -= 1
-                        if self.check_collision(self.active_piece1, self.board1):
-                            self.active_piece1.x += 1
-                    elif event.key == pygame.K_d:  # right
-                        self.active_piece1.x += 1
-                        if self.check_collision(self.active_piece1, self.board1):
-                            self.active_piece1.x -= 1
-                    elif event.key == pygame.K_w:  # rotate
-                        old_orientation = self.active_piece1.orientation
-                        self.active_piece1.rotate()
-                        if self.check_collision(self.active_piece1, self.board1):
-                            self.active_piece1.orientation = old_orientation
-                    elif event.key == pygame.K_s:  # soft drop
-                        self.active_piece1.y += 1
-                        if self.check_collision(self.active_piece1, self.board1):
-                            self.active_piece1.y -= 1
-                            self.lock_piece(self.active_piece1, self.board1, player=1)
-                    elif event.key == pygame.K_SPACE:  # hard drop
-                        while not self.check_collision(self.active_piece1, self.board1):
-                            self.active_piece1.y += 1
-                        self.active_piece1.y -= 1
-                        self.lock_piece(self.active_piece1, self.board1, player=1)
-
-                # Player 2 (arrow keys, RCtrl)
-                if not self.game_over2 and self.active_piece2:
-                    if event.key == pygame.K_LEFT:
-                        self.active_piece2.x -= 1
-                        if self.check_collision(self.active_piece2, self.board2):
-                            self.active_piece2.x += 1
-                    elif event.key == pygame.K_RIGHT:
-                        self.active_piece2.x += 1
-                        if self.check_collision(self.active_piece2, self.board2):
-                            self.active_piece2.x -= 1
-                    elif event.key == pygame.K_UP:
-                        old_orientation = self.active_piece2.orientation
-                        self.active_piece2.rotate()
-                        if self.check_collision(self.active_piece2, self.board2):
-                            self.active_piece2.orientation = old_orientation
-                    elif event.key == pygame.K_DOWN:
-                        self.active_piece2.y += 1
-                        if self.check_collision(self.active_piece2, self.board2):
-                            self.active_piece2.y -= 1
-                            self.lock_piece(self.active_piece2, self.board2, player=2)
-                    elif event.key == pygame.K_RCTRL:  # hard drop for player 2
-                        while not self.check_collision(self.active_piece2, self.board2):
-                            self.active_piece2.y += 1
-                        self.active_piece2.y -= 1
-                        self.lock_piece(self.active_piece2, self.board2, player=2)
-
-    # GAME UPDATE
-    def update(self, dt: float):
+    def update_board(self):
+        dt = self.clock.tick(FPS) / 1000.0
         # Player 1 gravity
         if not self.game_over1 and self.active_piece1:
             self.drop_timer1 += dt
@@ -206,7 +137,90 @@ class Tetris:
         if self.game_over1 and self.game_over2:
             self.running = False
 
-    # COLLISION & LOCK & CLEAR
+        self.render()
+
+    def check_win_condition(self):
+        """Check if both players are done or if the game was closed."""
+        return (self.game_over1 and self.game_over2) or (not self.running)
+
+    def handle_player_input(self, player, action):
+        if player == 1 and not self.game_over1 and self.active_piece1:
+            self._handle_player1_action(action)
+        elif player == 2 and not self.game_over2 and self.active_piece2:
+            self._handle_player2_action(action)
+
+    def gameLoop(self):
+        while not self.check_win_condition():
+            self.handle_events()
+            self.update_board()  # includes gravity & rendering
+
+        pygame.quit()
+
+    # Real-time event handling
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+
+            elif event.type == pygame.KEYDOWN:
+                # Player 1
+                if not self.game_over1 and self.active_piece1:
+                    self._handle_player1_keys(event.key)
+                # Player 2
+                if not self.game_over2 and self.active_piece2:
+                    self._handle_player2_keys(event.key)
+
+    def _handle_player1_keys(self, key):
+        if key == pygame.K_a:  # left
+            self.active_piece1.x -= 1
+            if self.check_collision(self.active_piece1, self.board1):
+                self.active_piece1.x += 1
+        elif key == pygame.K_d:  # right
+            self.active_piece1.x += 1
+            if self.check_collision(self.active_piece1, self.board1):
+                self.active_piece1.x -= 1
+        elif key == pygame.K_w:  # rotate
+            old_orientation = self.active_piece1.orientation
+            self.active_piece1.rotate()
+            if self.check_collision(self.active_piece1, self.board1):
+                self.active_piece1.orientation = old_orientation
+        elif key == pygame.K_s:  # soft drop
+            self.active_piece1.y += 1
+            if self.check_collision(self.active_piece1, self.board1):
+                self.active_piece1.y -= 1
+                self.lock_piece(self.active_piece1, self.board1, player=1)
+        elif key == pygame.K_SPACE:  # hard drop
+            while not self.check_collision(self.active_piece1, self.board1):
+                self.active_piece1.y += 1
+            self.active_piece1.y -= 1
+            self.lock_piece(self.active_piece1, self.board1, player=1)
+
+    def _handle_player2_keys(self, key):
+        if key == pygame.K_LEFT:
+            self.active_piece2.x -= 1
+            if self.check_collision(self.active_piece2, self.board2):
+                self.active_piece2.x += 1
+        elif key == pygame.K_RIGHT:
+            self.active_piece2.x += 1
+            if self.check_collision(self.active_piece2, self.board2):
+                self.active_piece2.x -= 1
+        elif key == pygame.K_UP:
+            old_orientation = self.active_piece2.orientation
+            self.active_piece2.rotate()
+            if self.check_collision(self.active_piece2, self.board2):
+                self.active_piece2.orientation = old_orientation
+        elif key == pygame.K_DOWN:
+            self.active_piece2.y += 1
+            if self.check_collision(self.active_piece2, self.board2):
+                self.active_piece2.y -= 1
+                self.lock_piece(self.active_piece2, self.board2, player=2)
+        elif key == pygame.K_RCTRL:  # hard drop
+            while not self.check_collision(self.active_piece2, self.board2):
+                self.active_piece2.y += 1
+            self.active_piece2.y -= 1
+            self.lock_piece(self.active_piece2, self.board2, player=2)
+
+    # Collision / Lock / Clear
     def check_collision(self, piece: TetrisPiece, board: List[List[Optional[str]]]) -> bool:
         for (bx, by) in piece.get_block_positions():
             if bx < 0 or bx >= BOARD_WIDTH or by < 0 or by >= BOARD_HEIGHT:
@@ -220,9 +234,9 @@ class Tetris:
         for (bx, by) in piece.get_block_positions():
             board[by][bx] = piece.shape
         self.clear_lines(board, player)
+
         if player == 1:
             self.spawn_piece1()
-            # Check immediate collision => game over for P1
             if self.check_collision(self.active_piece1, self.board1):
                 self.game_over1 = True
         else:
@@ -234,18 +248,18 @@ class Tetris:
         lines_cleared = 0
         for row in range(BOARD_HEIGHT):
             if all(board[row][col] is not None for col in range(BOARD_WIDTH)):
-                # remove row
                 lines_cleared += 1
                 for r in range(row, 0, -1):
                     board[r] = board[r - 1][:]
                 board[0] = [None for _ in range(BOARD_WIDTH)]
 
-        # Update scores
+        # Update the parent player's score
         if lines_cleared > 0:
+            points = lines_cleared * 100
             if player == 1:
-                self.score1 += lines_cleared * 100
+                self.player1.updateScore(points)
             else:
-                self.score2 += lines_cleared * 100
+                self.player2.updateScore(points)
 
     # SPAWN PIECES
     def spawn_piece1(self):
@@ -259,7 +273,6 @@ class Tetris:
     # RENDER
     def render(self):
         self.screen.fill((255, 255, 255))
-        # self.screen.fill((30, 30, 30))
 
         # Render board1
         self._draw_board(self.board1, offset_x=0, offset_y=0)
@@ -273,8 +286,8 @@ class Tetris:
             self._draw_piece(self.active_piece2, offset_x=(BOARD_WIDTH * BLOCK_SIZE + 60))
 
         # Player names, scores, game over states
-        self._draw_text(f"{self.player1_name} Score: {self.score1}", 20, 10, 10)
-        self._draw_text(f"{self.player2_name} Score: {self.score2}",
+        self._draw_text(f"{self.player1.name} Score: {self.player1.score}", 20, 10, 10)
+        self._draw_text(f"{self.player2.name} Score: {self.player2.score}",
                         20, BOARD_WIDTH * BLOCK_SIZE + 70, 10)
 
         if self.game_over1:
@@ -285,7 +298,23 @@ class Tetris:
 
         pygame.display.flip()
 
-    def _draw_grid(self, offset_x: int, offset_y: int):
+    def _draw_board(self, board: List[List[Optional[str]]], offset_x: int, offset_y: int):
+        """Draw locked/placed tiles in the board + grid lines."""
+        # Draw Tiles
+        for y in range(BOARD_HEIGHT):
+            for x in range(BOARD_WIDTH):
+                shape = board[y][x]
+                if shape is not None:
+                    color = SHAPE_COLORS.get(shape, (200, 200, 200))
+                    rect = pygame.Rect(
+                        offset_x + x * BLOCK_SIZE,
+                        offset_y + y * BLOCK_SIZE,
+                        BLOCK_SIZE,
+                        BLOCK_SIZE
+                    )
+                    pygame.draw.rect(self.screen, color, rect)
+
+        # Draw Grid
         for row in range(BOARD_HEIGHT + 1):
             pygame.draw.line(
                 self.screen,
@@ -303,24 +332,6 @@ class Tetris:
                 width=1
             )
 
-    def _draw_board(self, board: List[List[Optional[str]]], offset_x: int, offset_y: int):
-        """Draw locked/placed tiles in the board."""
-        for y in range(BOARD_HEIGHT):
-            for x in range(BOARD_WIDTH):
-                shape = board[y][x]
-                if shape is not None:
-                    color = SHAPE_COLORS.get(shape, (200, 200, 200))
-                    rect = pygame.Rect(
-                        offset_x + x * BLOCK_SIZE,
-                        offset_y + y * BLOCK_SIZE,
-                        BLOCK_SIZE,
-                        BLOCK_SIZE
-                    )
-                    pygame.draw.rect(self.screen, color, rect)
-                    # pygame.draw.rect(self.screen, (50, 50, 50), rect, 1)
-
-        self._draw_grid(offset_x, offset_y)
-
     def _draw_piece(self, piece: TetrisPiece, offset_x: int):
         """Draw the active piece at its current position."""
         color = SHAPE_COLORS.get(piece.shape, (200, 200, 200))
@@ -337,5 +348,16 @@ class Tetris:
         self.screen.blit(surface, (x, y))
 
 if __name__ == "__main__":
-    game = Tetris(player1_name="Alice", player2_name="Bob")
-    game.run()
+    from src.engines.player import Player
+    from src.engines.board import Board
+
+    p1 = Player("Alice")
+    p2 = Player("Bob")
+    dummy_board = Board(BOARD_WIDTH, BOARD_HEIGHT)
+
+    game = TetrisGame(dummy_board, p1, p2)
+    game.initialize_board()
+    game.gameLoop()
+    print("Tetris finished!")
+    print(f"{p1.name} final score: {p1.score}")
+    print(f"{p2.name} final score: {p2.score}")
