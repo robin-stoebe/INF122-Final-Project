@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
-from board import Board
+from src.engines.board import Board
+from src.engines.player import Player
 
 class Game(ABC):
     """Abstract base class"""
     
-    def __init__(self, players):
-        self.board = Board()
+    def __init__(self, board: Board, player1: Player, player2: Player):
+        self.board = board
         self.player1 = player1
         self.player2 = player2
 
