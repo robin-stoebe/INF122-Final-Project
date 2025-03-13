@@ -1,3 +1,5 @@
+from src.engines.game import Game
+
 class SuikaGame(Game):
     def __init__(self, player1, player2):
         super().__init__(player1, player2)
