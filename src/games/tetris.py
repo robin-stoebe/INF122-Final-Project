@@ -67,7 +67,7 @@ class TetrisPiece:
             return [(-b[1], b[0]) for b in blocks]
         return blocks
 
-class TwoPlayerTetris:
+class Tetris:
     """
     A real-time Tetris game with two separate boards side-by-side in a single Pygame window.
     Player 1 uses WASD (and space to hard drop), Player 2 uses arrow keys (and RCtrl to hard drop).
@@ -289,7 +289,7 @@ class TwoPlayerTetris:
         for row in range(BOARD_HEIGHT + 1):
             pygame.draw.line(
                 self.screen,
-                (80, 80, 80),  # grey
+                (80, 80, 80),
                 (offset_x, offset_y + row * BLOCK_SIZE),
                 (offset_x + BOARD_WIDTH * BLOCK_SIZE, offset_y + row * BLOCK_SIZE),
                 width=1
@@ -297,7 +297,7 @@ class TwoPlayerTetris:
         for col in range(BOARD_WIDTH + 1):
             pygame.draw.line(
                 self.screen,
-                (80, 80, 80),  # grey
+                (80, 80, 80),
                 (offset_x + col * BLOCK_SIZE, offset_y),
                 (offset_x + col * BLOCK_SIZE, offset_y + BOARD_HEIGHT * BLOCK_SIZE),
                 width=1
@@ -337,5 +337,5 @@ class TwoPlayerTetris:
         self.screen.blit(surface, (x, y))
 
 if __name__ == "__main__":
-    game = TwoPlayerTetris(player1_name="Alice", player2_name="Bob")
+    game = Tetris(player1_name="Alice", player2_name="Bob")
     game.run()
