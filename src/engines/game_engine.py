@@ -4,6 +4,8 @@ from src.games.suika import SuikaGame
 from src.engines.board import Board
 from src.engines.player import Player
 # import pygame
+from src.ui.UI import UI
+import pygame
 # import pymunk
 
 
@@ -12,7 +14,8 @@ class GameEngine:
         self.games = []
         self.timer = 0
         # self.games: list[game] = []
-        # self.ui = UI() // UI class not yet implemented
+        self.ui = UI(self)
+        self.timer = 0
 
     def startGame(self):
         print("Game Engine: Starting game...")
@@ -20,6 +23,7 @@ class GameEngine:
         if selected_game:
             selected_game.initialize_board()
             selected_game.gameLoop()
+            pygame.quit()
         else:
             print("No game started.")
 
@@ -59,7 +63,7 @@ class GameEngine:
 
     def run(self):
         # self.ui.init() // not yet implemented 
-        self.startGame()
+        self.ui.run()
 
     def __repr__(self):
         return f"GameEngine(games={len(self.games)})"
@@ -67,11 +71,12 @@ class GameEngine:
 if __name__ == "__main__":
     engine = GameEngine()
 
-    p1 = Player("Ava")
-    p2 = Player("Bob")
+    # COMMENTED OUT JUST FOR UI TESTING, FEEL FREE TO REVERT - WILSON
+    # p1 = Player("Ava")
+    # p2 = Player("Bob")
 
-    tetris_board = Board(10, 20)
-    tetris_game = TetrisGame(tetris_board, p1, p2)
-    engine.games.append(tetris_game)
+    # tetris_board = Board(10, 20)
+    # tetris_game = TetrisGame(tetris_board, p1, p2)
+    # engine.games.append(tetris_game)
 
     engine.run()
