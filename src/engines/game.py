@@ -15,15 +15,12 @@ class Game(ABC):
 
         self.scoring_system = ScoringSystem(scoring_rules if scoring_rules else {})
 
-    def check_match(self):
-        """Each game defines its own match-checking logic."""
-        raise NotImplementedError("Subclasses must implement check_match()")
-
     @abstractmethod
     def update_board(self):
         """Each game defines its own board update logic."""
         raise NotImplementedError("Subclasses must implement update_board()")
 
+    @abstractmethod
     def is_game_over(self):
         """Each game defines its own game-over condition."""
         raise NotImplementedError("Subclasses must implement is_game_over()")
