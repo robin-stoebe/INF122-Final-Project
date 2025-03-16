@@ -22,7 +22,8 @@ class GameEngine:
         selected_game = self.selectGame()
         if selected_game:
             selected_game.initialize_board()
-            selected_game.gameLoop()
+            selected_game.gameLoop() # Not sure what this is yet - Calvin
+            self.run_game_loop(selected_game)
             pygame.quit()
         else:
             print("No game started.")
@@ -60,6 +61,20 @@ class GameEngine:
                     print("Invalid choice. Please try again.")
             except ValueError:
                 print("Please enter a valid integer.")
+
+    def run_game_loop(self, game):
+        """Unified game loop for all games."""
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                    game.handle_player_input(event)  # passes raw event to games to process
+                    
+
+            game.update_board()
+            game.render()
 
     def run(self):
         # self.ui.init() // not yet implemented 
