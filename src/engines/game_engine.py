@@ -1,21 +1,25 @@
 import sys
 from src.games.tetris import TetrisGame
-from src.games.suika import SuikaGame
+# from src.games.suika import SuikaGame
 from src.engines.board import Board
 from src.engines.player import Player
 # import pygame
-from src.ui.UI import UI
+from src.ui.main_menu import MainMenu
+from src.ui.screen_manager import ScreenManager
+from src.ui.game_selection_screen import GameSelectionScreen
 import pygame
 # import pymunk
 
 
 class GameEngine:
-    def __init__(self):
+    def __init__(self, screen_manager):
         self.games = []
         self.timer = 0
         # self.games: list[game] = []
-        self.ui = UI(self)
+        self.main_menu = MainMenu(self)
         self.timer = 0
+
+        self.screen_manager = screen_manager
 
     def startGame(self):
         print("Game Engine: Starting game...")
@@ -39,28 +43,41 @@ class GameEngine:
         pass
 
     def selectGame(self):
-        print("Selecting which game to play...")
+        """Switch to game selection screen"""
+        print("Game Engine: Opening game selection menu...")
+        self.screen_manager.set_screen("game_selection")
 
-        if not self.games:
-            print("No games available.")
-            return None
+        # // Not sure if this was still needed thus commented out, otherwise would look to refactor/delete - Wilson
+        # if not self.games:
+        #     print("No games available.")
+        #     return None
         
-        # Display the list of games
-        print("Select a game to play:") 
+        # # Display the list of games
+        # print("Select a game to play:") 
 
-        for i, game in enumerate(self.games):
-            print(f"{i}: {type(game).__name__}")
+        # for i, game in enumerate(self.games):
+        #     print(f"{i}: {type(game).__name__}")
         
-        while True:
-            choice_str = input("Enter the number of the game you want to play: ")
-            try:
-                choice = int(choice_str)
-                if 0 <= choice < len(self.games):
-                    return self.games[choice]
-                else:
-                    print("Invalid choice. Please try again.")
-            except ValueError:
-                print("Please enter a valid integer.")
+        # while True:
+        #     choice_str = input("Enter the number of the game you want to play: ")
+        #     try:
+        #         choice = int(choice_str)
+        #         if 0 <= choice < len(self.games):
+        #             return self.games[choice]
+        #         else:
+        #             print("Invalid choice. Please try again.")
+        #     except ValueError:
+        #         print("Please enter a valid integer.")
+
+    def runSuika(self):
+        """Run instance of Suika after selecting Suika button"""
+        print("Running Suika")
+        pass
+
+    def runTetris(self):
+        """Run instance of Tetris after selecting Suika button"""
+        print("Running Tetris")
+        pass
 
     def run_game_loop(self, game):
         """Unified game loop for all games."""
@@ -76,15 +93,27 @@ class GameEngine:
             game.update_board()
             game.render()
 
-    def run(self):
-        # self.ui.init() // not yet implemented 
-        self.ui.run()
+    # def run(self):
+    #     self.main_menu.run()
 
     def __repr__(self):
         return f"GameEngine(games={len(self.games)})"
     
 if __name__ == "__main__":
-    engine = GameEngine()
+    screen_manager = ScreenManager()
+    engine = GameEngine(screen_manager)
+
+    # Create screens
+    main_menu = engine.main_menu
+    game_selection = GameSelectionScreen(screen_manager, engine)
+
+    # Add screens to manager
+    screen_manager.add_screen("main_menu", main_menu)
+    screen_manager.add_screen("game_selection", game_selection)
+    
+    # Start screen at main menu
+    screen_manager.set_screen("main_menu")
+    screen_manager.run()
 
     # COMMENTED OUT JUST FOR UI TESTING, FEEL FREE TO REVERT - WILSON
     # p1 = Player("Ava")
@@ -94,4 +123,4 @@ if __name__ == "__main__":
     # tetris_game = TetrisGame(tetris_board, p1, p2)
     # engine.games.append(tetris_game)
 
-    engine.run()
+    #engine.run()
