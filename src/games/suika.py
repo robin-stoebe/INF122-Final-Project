@@ -137,111 +137,124 @@ def resolve_collision(p1, p2, space, particles, mapper):
     return None
 
 
-# Create Pygame window
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("PySuika")
-clock = pygame.time.Clock()
-pygame.font.init()
-scorefont = pygame.font.SysFont("monospace", 32)
-overfont = pygame.font.SysFont("monospace", 72)
+class SuikaGame(Game):
+    """Suika Game using TMGE"""
+    def __init__(self, player1, player2):
+        super().__init__(WIDTH, HEIGHT, player1, player2, scoring_rules={"merge": 1})
+        pygame.init()
 
-space = pymunk.Space()
-space.gravity = (0, GRAVITY)
-space.damping = DAMPING
-space.collision_bias = BIAS
-print(f"{space.damping=}")
-print(f"{space.collision_bias=}")
-print(f"{space.collision_slop=}")
+        self.running = True
+        self.space = pymunk.Space()
+        self.space.gravity = (0, GRAVITY)
+        self.space.damping = DAMPING
+        self.space.collision_bias = BIAS
 
-# Walls
-pad = 20
-left = Wall(A, B, space)
-bottom = Wall(B, C, space)
-right = Wall(C, D, space)
-walls = [left, bottom, right]
+        # Ensure the board is the original Suika size
+        self.board_width = WIDTH
+        self.board_height = HEIGHT
+
+        # Create game walls with  dimensions
+        self.walls = [
+            Wall(A, B, self.space),
+            Wall(B, C, self.space),
+            Wall(C, D, self.space)
+        ]
+
+        # Game data structures
+        self.shape_to_particle = {}
+        self.particles = []
+        self.wait_for_next = 0
+        self.next_particle = PreParticle(WIDTH // 2, rng.integers(0, 5))  # ✅ Preview piece follows mouse
+
+        # Collision Handler
+        handler = self.space.add_collision_handler(1, 1)
+        handler.begin = self.collide
+        handler.data["particles"] = self.particles
+        handler.data["mapper"] = self.shape_to_particle
+
+    def collide(self, arbiter, space, data):
+        """Handles particle merging logic upon collision."""
+        sh1, sh2 = arbiter.shapes
+        p1, p2 = self.shape_to_particle[sh1], self.shape_to_particle[sh2]
+
+        if p1.n == p2.n:  # Only merge if the particles are the same
+            p1.kill(space)
+            p2.kill(space)
+
+            # Create a new merged particle at collision location
+            merged_particle = Particle(np.mean([p1.pos, p2.pos], axis=0), p1.n + 1, space, self.shape_to_particle)
+            self.particles.append(merged_particle)
+
+            # Update score
+            self.scoring_system.add_score("merge", POINTS[p1.n])
+
+    def update_board(self):
+        """Handles physics updates and checks for new particle spawning."""
+        self.space.step(1 / FPS)
+
+        if self.wait_for_next > 1:
+            self.wait_for_next -= 1
+        elif self.wait_for_next == 1:
+            self.next_particle = PreParticle(self.next_particle.x, rng.integers(0, 5))
+            self.wait_for_next -= 1
+
+    def is_game_over(self):
+        """Ends the game immediately if a particle overflows."""
+        for p in self.particles:
+            if p.pos[1] < PAD[1] and p.has_collided:  # Check if a particle collides at the top
+                print(f"Game Over! Final Score: {self.scoring_system.get_score()}")
+                self.running = False
+                return True
+        return False
+
+    def handle_player_input(self, event):
+        """Handles movement of the next particle and releasing it."""
+        if event.type == pygame.MOUSEMOTION:
+            self.next_particle.set_x(event.pos[0])  # Move preview piece with mouse
+
+        if event.type == pygame.KEYDOWN:
+            if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
+                move_amount = -10 if event.key == pygame.K_LEFT else 10
+                self.next_particle.set_x(self.next_particle.x + move_amount)  # Allow arrow keys to move preview piece
+
+            elif event.key in [pygame.K_RETURN, pygame.K_SPACE] and self.wait_for_next == 0:
+                # Release the particle and start countdown for the next one
+                self.particles.append(self.next_particle.release(self.space, self.shape_to_particle))
+                self.wait_for_next = NEXT_DELAY
+
+        if event.type == pygame.MOUSEBUTTONDOWN and self.wait_for_next == 0:
+            self.particles.append(self.next_particle.release(self.space, self.shape_to_particle))
+            self.wait_for_next = NEXT_DELAY  # Allow mouse click to release piece
+
+    def render(self, screen):
+        """Draws all game elements on screen with the correct original board size."""
+        screen.fill(BG_COLOR)
+
+        # Draw game walls
+        for wall in self.walls:
+            wall.draw(screen)
+
+        # Draw all particles
+        for p in self.particles:
+            p.draw(screen)
+
+        # Draw next particle preview at mouse position
+        if self.wait_for_next == 0:
+            self.next_particle.draw(screen)
+
+        # Display Score
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f"Score: {self.scoring_system.get_score()}", True, (0, 0, 0))
+        screen.blit(score_text, (10, 10))
+
+        pygame.display.flip()
 
 
-# List to store particles
-wait_for_next = 0
-next_particle = PreParticle(WIDTH//2, rng.integers(0, 5))
-particles = []
+def main():
+    game = SuikaGame(None, None)
+    screen = pygame.display.set_mode(SIZE)
+    clock = pygame.time.Clock()
+    game.run_game_loop(screen, clock, FPS)
 
-# Collision Handler
-handler = space.add_collision_handler(1, 1)
-
-
-def collide(arbiter, space, data):
-    sh1, sh2 = arbiter.shapes
-    _mapper = data["mapper"]
-    pa1 = _mapper[sh1]
-    pa2 = _mapper[sh2]
-    cond = bool(pa1.n != pa2.n)
-    pa1.has_collided = cond
-    pa2.has_collided = cond
-    if not cond:
-        new_particle = resolve_collision(pa1, pa2, space, data["particles"], _mapper)
-        data["particles"].append(new_particle)
-        data["score"] += POINTS[pa1.n]
-    return cond
-
-
-handler.begin = collide
-handler.data["mapper"] = shape_to_particle
-handler.data["particles"] = particles
-handler.data["score"] = 0
-
-# Main game loop
-game_over = False
-
-while not game_over:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        elif event.type == pygame.KEYDOWN:
-            if event.key in [pygame.K_RETURN, pygame.K_SPACE]:
-                particles.append(next_particle.release(space, shape_to_particle))
-                wait_for_next = NEXT_DELAY
-            elif event.key in [pygame.K_q, pygame.K_ESCAPE]:
-                pygame.quit()
-                sys.exit()
-        elif event.type == pygame.MOUSEBUTTONDOWN and wait_for_next == 0:
-            particles.append(next_particle.release(space, shape_to_particle))
-            wait_for_next = NEXT_DELAY
-
-    next_particle.set_x(pygame.mouse.get_pos()[0])
-
-    if wait_for_next > 1:
-        wait_for_next -= 1
-    elif wait_for_next == 1:
-        next_particle = PreParticle(next_particle.x, rng.integers(0, 5))
-        wait_for_next -= 1
-
-    # Draw background and particles
-    screen.fill(BG_COLOR)
-    if wait_for_next == 0:
-        next_particle.draw(screen)
-    for w in walls:
-        w.draw(screen)
-    for p in particles:
-        p.draw(screen)
-        if p.pos[1] < PAD[1] and p.has_collided:
-            label = overfont.render("Game Over!", 1, (0, 0, 0))
-            screen.blit(label, PAD)
-            game_over = True
-    label = scorefont.render(f"Score: {handler.data['score']}", 1, (0, 0, 0))
-    screen.blit(label, (10, 10))
-
-    space.step(1/FPS)
-    pygame.display.update()
-    clock.tick(FPS)
-
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        elif event.type == pygame.KEYDOWN:
-            if event.key in [pygame.K_RETURN, pygame.K_SPACE, pygame.K_q, pygame.K_ESCAPE]:
-                pygame.quit()
-                sys.exit()
+if __name__ == "__main__":
+    main()
