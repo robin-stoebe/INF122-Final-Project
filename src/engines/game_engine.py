@@ -36,8 +36,6 @@ class GameEngine:
         """Load a player's scores from a file"""
         print(f"Loading scores from {filename}...")
         self.screen_manager.set_screen("scores")
-        # IMPLEMENT FURTHER
-        pass
 
     def saveGame(self, filename: str):
         """Save the current game to a file"""
@@ -129,13 +127,3 @@ if __name__ == "__main__":
     # Start screen at main menu
     screen_manager.set_screen("login")
     screen_manager.run()
-
-    # COMMENTED OUT JUST FOR UI TESTING, FEEL FREE TO REVERT - WILSON
-    p1 = Player("Ava")
-    p2 = Player("Bob")
-
-    tetris_board = Board(10, 20)
-    tetris_game = TetrisGame(tetris_board, p1, p2)
-    engine.games.append(tetris_game)
-
-    engine.run()
