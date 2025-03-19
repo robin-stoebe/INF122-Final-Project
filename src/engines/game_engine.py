@@ -7,6 +7,7 @@ from src.engines.player import Player
 from src.ui.main_menu import MainMenu
 from src.ui.screen_manager import ScreenManager
 from src.ui.game_selection_screen import GameSelectionScreen
+from src.ui.login_screen import LoginScreen
 import pygame
 # import pymunk
 
@@ -69,6 +70,12 @@ class GameEngine:
         #     except ValueError:
         #         print("Please enter a valid integer.")
 
+    # works with ui > login_screen.py and engines > player.py
+    def set_player(self, player, profile_manager):
+        """Store logged in player's data."""
+        self.player = player
+        self.profile_manager = profile_manager
+
     def runSuika(self):
         """Run instance of Suika after selecting Suika button"""
         print("Running Suika")
@@ -103,24 +110,27 @@ if __name__ == "__main__":
     screen_manager = ScreenManager()
     engine = GameEngine(screen_manager)
 
+    login_screen = LoginScreen(screen_manager, engine)
+
     # Create screens
     main_menu = engine.main_menu
     game_selection = GameSelectionScreen(screen_manager, engine)
 
     # Add screens to manager
+    screen_manager.add_screen("login", login_screen)
     screen_manager.add_screen("main_menu", main_menu)
     screen_manager.add_screen("game_selection", game_selection)
     
     # Start screen at main menu
-    screen_manager.set_screen("main_menu")
+    screen_manager.set_screen("login")
     screen_manager.run()
 
     # COMMENTED OUT JUST FOR UI TESTING, FEEL FREE TO REVERT - WILSON
-    # p1 = Player("Ava")
-    # p2 = Player("Bob")
+    p1 = Player("Ava")
+    p2 = Player("Bob")
 
-    # tetris_board = Board(10, 20)
-    # tetris_game = TetrisGame(tetris_board, p1, p2)
-    # engine.games.append(tetris_game)
+    tetris_board = Board(10, 20)
+    tetris_game = TetrisGame(tetris_board, p1, p2)
+    engine.games.append(tetris_game)
 
-    #engine.run()
+    engine.run()
