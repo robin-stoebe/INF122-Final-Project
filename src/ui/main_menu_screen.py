@@ -11,7 +11,7 @@ class MainMenu(BaseScreen):
         # BUTTONS
         self.buttons = [
             Button(450, 400, 300, 70, "Start Game", self.button_font, (10, 120, 200), (50, 150, 220), self.game_engine.selectGame),
-            Button(450, 500, 300, 70, "Load Game", self.button_font, (200, 140, 3), (220, 160, 30), self.game_engine.loadGame),
+            Button(450, 500, 300, 70, "Load Scores", self.button_font, (200, 140, 3), (220, 160, 30), self.game_engine.loadScores),
             Button(450, 600, 300, 70, "Exit Game", self.button_font, (200, 40, 40), (220, 70, 70), self.exit_game),
         ]
 
@@ -31,6 +31,7 @@ class MainMenu(BaseScreen):
 
     def run(self):
         self.running = True
+        pygame.display.set_caption("Main Menu")
         while self.running:
             self.draw()
             for event in pygame.event.get():

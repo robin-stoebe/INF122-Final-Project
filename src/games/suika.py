@@ -249,12 +249,12 @@ class SuikaGame(Game):
 
         pygame.display.flip()
 
+    # RUN "python -m src.engines.game_engine" to run the game - Wilson
+# def main():
+#     game = SuikaGame(None, None)
+#     screen = pygame.display.set_mode(SIZE)
+#     clock = pygame.time.Clock()
+#     game.run_game_loop(screen, clock, FPS)
 
-def main():
-    game = SuikaGame(None, None)
-    screen = pygame.display.set_mode(SIZE)
-    clock = pygame.time.Clock()
-    game.run_game_loop(screen, clock, FPS)
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

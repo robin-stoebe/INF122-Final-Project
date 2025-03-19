@@ -195,13 +195,14 @@ class TetrisGame(Game):
 
         pygame.display.flip()  # Refresh screen
 
-def main():
-    player1, player2 = None, None
-    game = TetrisGame(player1, player2)
-    pygame.init()
-    screen = pygame.display.set_mode((BOARD_WIDTH * BLOCK_SIZE, BOARD_HEIGHT * BLOCK_SIZE))
-    clock = pygame.time.Clock()
-    game.run_game_loop(screen, clock, FPS)
+    # RUN "python -m src.engines.game_engine" to run the game - Wilson
+# def main():
+#     player1, player2 = None, None
+#     game = TetrisGame(player1, player2)
+#     pygame.init()
+#     screen = pygame.display.set_mode((BOARD_WIDTH * BLOCK_SIZE, BOARD_HEIGHT * BLOCK_SIZE))
+#     clock = pygame.time.Clock()
+#     game.run_game_loop(screen, clock, FPS)
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

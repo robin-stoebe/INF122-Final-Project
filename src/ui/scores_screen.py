@@ -1,18 +1,17 @@
 import pygame
-import os
 from .base_screen import BaseScreen
 from .button import Button
 
-class GameSelectionScreen(BaseScreen):
+class scoresScreen(BaseScreen):
     def __init__(self, screen_manager, engine):
         super().__init__(screen_manager)
         self.game_engine = engine
+        # self.player = self.game_engine.player
+        # self.scores = self.game_engine.scores
 
-        # Buttons for Suika, Tetris, and Back
+        # BUTTONS
         self.buttons = [
-            Button(450, 350, 300, 70, "Suika", self.button_font, (10, 120, 200), (50, 150, 220), self.game_engine.runSuika),
-            Button(450, 450, 300, 70, "Tetris", self.button_font, (200, 140, 3), (220, 160, 30), self.game_engine.runTetris),
-            Button(450, 550, 300, 70, "Back", self.button_font, (200, 40, 40), (220, 70, 70), self.go_back),
+            Button(500, 600, 200, 70, "Back", self.button_font, (200, 40, 40), (220, 70, 70), self.go_back),
         ]
         self.running = False
 
@@ -20,18 +19,20 @@ class GameSelectionScreen(BaseScreen):
         self.screen.fill((191, 88, 171))  # Background Color
 
         # Draw Title
-        title_text = self.title_font.render("Select a Game", True, (25, 169, 252))
-        self.screen.blit(title_text, (self.WIDTH // 2 - title_text.get_width() // 2, 150))
+        title_text = self.title_font.render("High Scores", True, (25, 169, 252))
+        self.screen.blit(title_text, (self.WIDTH // 2 - title_text.get_width() // 2, 100))
 
-        # Draw Buttons
+        # Display name and score(s)
+        # IMPLEMENT FURTHER
+
+        # Draw Button
         for button in self.buttons:
             button.draw(self.screen)
-
         pygame.display.flip()
-
+    
     def run(self):
         self.running = True
-        pygame.display.set_caption("Select a Game")
+        pygame.display.set_caption("High Scores")
         while self.running:
             self.draw()
             for event in pygame.event.get():
@@ -39,8 +40,6 @@ class GameSelectionScreen(BaseScreen):
                     self.running = False
                 for button in self.buttons:
                     button.check_click(event)
-
-        return
     
     def go_back(self):
         """Return to Main Menu screen"""
