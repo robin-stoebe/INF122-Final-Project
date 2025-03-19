@@ -1,22 +1,25 @@
 import pygame
+import os
 from src.engines.profile_manager import ProfileManager
 from src.engines.player import Player
+from .base_screen import BaseScreen
 
-class LoginScreen:
+class LoginScreen(BaseScreen):
     def __init__(self, screen_manager, game_engine):
-        self.screen_manager = screen_manager
+        super().__init__(screen_manager)
         self.game_engine = game_engine
-        self.WIDTH, self.HEIGHT = 1200, 800
-        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
+        self.profile_manager = ProfileManager()
         pygame.display.set_caption("Login")
         self.font = pygame.font.Font(None, 50)
+        # Text Input
         self.input_box = pygame.Rect(400, 300, 400, 50)
         self.active = False
         self.text = ''
+        # Colors
         self.color_inactive = pygame.Color('lightskyblue3')
         self.color_active = pygame.Color('dodgerblue2')
         self.color = self.color_inactive
-        self.profile_manager = ProfileManager()
+
 
     def draw(self):
         self.screen.fill((30, 30, 30))

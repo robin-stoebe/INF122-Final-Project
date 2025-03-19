@@ -110,11 +110,10 @@ if __name__ == "__main__":
     screen_manager = ScreenManager()
     engine = GameEngine(screen_manager)
 
-    login_screen = LoginScreen(screen_manager, engine)
-
     # Create screens
     main_menu = MainMenu(screen_manager, engine)
     game_selection = GameSelectionScreen(screen_manager, engine)
+    login_screen = LoginScreen(screen_manager, engine)
 
     # Add screens to manager
     screen_manager.add_screen("login", login_screen)
