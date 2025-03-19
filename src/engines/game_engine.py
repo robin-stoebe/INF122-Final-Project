@@ -1,6 +1,6 @@
 import sys
 from src.games.tetris import TetrisGame
-# from src.games.suika import SuikaGame
+from src.games.suika import SuikaGame
 from src.engines.board import Board
 from src.engines.player import Player
 # import pygame
@@ -17,9 +17,6 @@ class GameEngine:
     def __init__(self, screen_manager):
         self.games = []
         self.timer = 0
-        # self.games: list[game] = []
-        self.timer = 0
-
         self.screen_manager = screen_manager
 
     def startGame(self):
@@ -79,11 +76,15 @@ class GameEngine:
     def runSuika(self):
         """Run instance of Suika after selecting Suika button"""
         print("Running Suika")
+        suika_game = SuikaGame(Player("Bob"), Player("Ava"))
+        self.run_game_loop(suika_game)
         pass
 
     def runTetris(self):
         """Run instance of Tetris after selecting Suika button"""
         print("Running Tetris")
+        tetris_game = TetrisGame(Player("Bob"), Player("Ava"))
+        self.run_game_loop(tetris_game)
         pass
 
     def run_game_loop(self, game):
@@ -96,12 +97,8 @@ class GameEngine:
                 elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                     game.handle_player_input(event)  # passes raw event to games to process
                     
-
             game.update_board()
             game.render()
-
-    # def run(self):
-    #     self.main_menu.run()
 
     def __repr__(self):
         return f"GameEngine(games={len(self.games)})"
