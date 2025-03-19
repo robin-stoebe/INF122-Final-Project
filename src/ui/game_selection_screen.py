@@ -1,27 +1,13 @@
 import pygame
 import os
+from .base_screen import BaseScreen
 from .button import Button
 
-class GameSelectionScreen:
+class GameSelectionScreen(BaseScreen):
     def __init__(self, screen_manager, engine):
-        self.screen_manager = screen_manager
+        super().__init__(screen_manager)
         self.game_engine = engine
-        self.WIDTH, self.HEIGHT = 1200, 800
-        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
         pygame.display.set_caption("Select a Game")
-
-        # FONTS
-        font_path_Starborn = os.path.join("assets", "fonts", "Starborn.ttf")    # Construct path to font file
-        if os.path.exists(font_path_Starborn):
-            self.title_font = pygame.font.Font(font_path_Starborn, 100)
-        else:
-            print("Font not found; using default font.")
-
-        font_path_Straw_Milky = os.path.join("assets", "fonts", "Straw Milky.otf")
-        if os.path.exists(font_path_Straw_Milky):
-            self.button_font = pygame.font.Font(font_path_Straw_Milky, 30)
-        else:
-            print("Font not found; using default font.")
 
         # Buttons for Suika, Tetris, and Back
         self.buttons = [

@@ -4,9 +4,10 @@ from src.games.tetris import TetrisGame
 from src.engines.board import Board
 from src.engines.player import Player
 # import pygame
-from src.ui.main_menu import MainMenu
+from src.ui.main_menu_screen import MainMenu
 from src.ui.screen_manager import ScreenManager
 from src.ui.game_selection_screen import GameSelectionScreen
+from src.ui.base_screen import BaseScreen
 import pygame
 # import pymunk
 
@@ -16,7 +17,6 @@ class GameEngine:
         self.games = []
         self.timer = 0
         # self.games: list[game] = []
-        self.main_menu = MainMenu(self)
         self.timer = 0
 
         self.screen_manager = screen_manager
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     engine = GameEngine(screen_manager)
 
     # Create screens
-    main_menu = engine.main_menu
+    main_menu = MainMenu(screen_manager, engine)
     game_selection = GameSelectionScreen(screen_manager, engine)
 
     # Add screens to manager

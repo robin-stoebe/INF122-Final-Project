@@ -16,5 +16,6 @@ class ScreenManager:
             self.current_screen.running = True  # Ensure new screen runs
 
     def run(self):
+        """Runs the active screen."""
         while self.current_screen:
             self.current_screen.run()

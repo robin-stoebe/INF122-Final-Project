@@ -1,29 +1,12 @@
 import pygame
-import time
 import os
+from .base_screen import BaseScreen
 from .button import Button
 
-class MainMenu:
-    def __init__(self, game_engine):
-        pygame.init()
+class MainMenu(BaseScreen):
+    def __init__(self, screen_manager, game_engine):
+        super().__init__(screen_manager)
         self.game_engine = game_engine
-        self.WIDTH, self.HEIGHT = 1200, 800
-        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
-        pygame.display.set_caption("TMGE Arcade")
-
-        # FONTS
-        self.font_path_Starborn = os.path.join("assets", "fonts", "Starborn.ttf")    # Construct path to font file
-        if os.path.exists(self.font_path_Starborn):
-            self.title_font = pygame.font.Font(self.font_path_Starborn, 100)
-        else:
-            print("Font not found; using default font.")
-
-        self.font_path_Straw_Milky = os.path.join("assets", "fonts", "Straw Milky.otf")
-        if os.path.exists(self.font_path_Straw_Milky):
-            self.button_font = pygame.font.Font(self.font_path_Straw_Milky, 30)
-        else:
-            print("Font not found; using default font.")
-
 
         # BUTTONS
         self.buttons = [
@@ -31,10 +14,9 @@ class MainMenu:
             Button(450, 500, 300, 70, "Load Game", self.button_font, (200, 140, 3), (220, 160, 30), self.game_engine.loadGame),
             Button(450, 600, 300, 70, "Exit Game", self.button_font, (200, 40, 40), (220, 70, 70), self.exit_game),
         ]
-        self.running = False
 
     
-    def draw_menu(self):
+    def draw(self):
         self.screen.fill((191, 88, 171))  # Background Color
 
         # Draw Title
@@ -50,7 +32,7 @@ class MainMenu:
     def run(self):
         self.running = True
         while self.running:
-            self.draw_menu()
+            self.draw()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
