@@ -21,17 +21,6 @@ class GameEngine:
         self.timer = 0
         self.screen_manager = screen_manager
 
-    # def startGame(self):
-    #     print("Game Engine: Starting game...")
-    #     selected_game = self.selectGame()
-    #     if selected_game:
-    #         selected_game.initialize_board()
-    #         selected_game.gameLoop() # Not sure what this is yet - Calvin
-    #         self.run_game_loop(selected_game)
-    #         pygame.quit()
-    #     else:
-    #         print("No game started.")
-
     def loadScores(self, filename: str):
         """Load a player's scores from a file"""
         print(f"Loading scores from {filename}...")
@@ -47,28 +36,6 @@ class GameEngine:
         """Switch to game selection screen"""
         print("Game Engine: Opening game selection menu...")
         self.screen_manager.set_screen("game_selection")
-
-        # // Not sure if this was still needed thus commented out, otherwise would look to refactor/delete - Wilson
-        # if not self.games:
-        #     print("No games available.")
-        #     return None
-        
-        # # Display the list of games
-        # print("Select a game to play:") 
-
-        # for i, game in enumerate(self.games):
-        #     print(f"{i}: {type(game).__name__}")
-        
-        # while True:
-        #     choice_str = input("Enter the number of the game you want to play: ")
-        #     try:
-        #         choice = int(choice_str)
-        #         if 0 <= choice < len(self.games):
-        #             return self.games[choice]
-        #         else:
-        #             print("Invalid choice. Please try again.")
-        #     except ValueError:
-        #         print("Please enter a valid integer.")
 
     # works with ui > login_screen.py and engines > player.py
     def set_player(self, player, profile_manager):

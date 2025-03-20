@@ -4,9 +4,9 @@ from .base_screen import BaseScreen
 from .button import Button
 
 class GameSelectionScreen(BaseScreen):
-    def __init__(self, screen_manager, engine):
+    def __init__(self, screen_manager, game_engine):
         super().__init__(screen_manager)
-        self.game_engine = engine
+        self.game_engine = game_engine
 
         # Buttons for Suika, Tetris, and Back
         self.buttons = [
