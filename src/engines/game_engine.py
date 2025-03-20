@@ -23,9 +23,9 @@ class GameEngine:
         self.player1 = Player()
         self.player2 = Player()
 
-    def loadScores(self, filename: str):
+    def loadScores(self):
         """Load a player's scores from a file"""
-        print(f"Loading scores from {filename}...")
+        print(f"Loading scores...")
         self.screen_manager.set_screen("scores")
 
     def saveGame(self, filename: str):
@@ -39,7 +39,7 @@ class GameEngine:
         print("Game Engine: Opening game selection menu...")
         self.screen_manager.set_screen("game_selection")
 
-    # works with ui > login_screen.py and engines > player.py
+    # works with ui > login_screen.py
     def set_player(self, player1, player2, profile_manager):
         """Store logged in player's data."""
         self.player1 = player1
@@ -54,6 +54,14 @@ class GameEngine:
         screen = pygame.display.set_mode(SIZE)
         suika_game.run_game_loop(screen, pygame.time.Clock(), 60)
 
+        final_score = suika_game.scoring_system.get_score()
+        self.player1.score = suika_game.player1.score
+        self.player2.score = suika_game.player2.score
+        self.profile_manager.update_profile_score(self.player1.name, self.player1.score)
+        self.profile_manager.update_profile_score(self.player2.name, self.player2.score)
+        self.profile_manager.save_profiles()
+
+
     def runTetris(self):
         """Run instance of Tetris after selecting Suika button"""
         print("Running Tetris")
@@ -61,6 +69,12 @@ class GameEngine:
         screen = pygame.display.set_mode((tetris_game.board.width * 30 * 2 + 60, tetris_game.board.height * 30))
         clock = pygame.time.Clock()
         tetris_game.run_game_loop(screen, clock, 60)
+
+        self.player1.score = tetris_game.player1.score  # Assuming the game updated these
+        self.player2.score = tetris_game.player2.score
+        self.profile_manager.update_profile_score(self.player1.name, self.player1.score)
+        self.profile_manager.update_profile_score(self.player2.name, self.player2.score)
+        self.profile_manager.save_profiles()
 
     def __repr__(self):
         return f"GameEngine(games={len(self.games)})"

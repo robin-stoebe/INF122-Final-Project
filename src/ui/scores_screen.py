@@ -22,7 +22,12 @@ class scoresScreen(BaseScreen):
         self.screen.blit(title_text, (self.WIDTH // 2 - title_text.get_width() // 2, 100))
 
         # Display name and score(s)
-        # IMPLEMENT FURTHER
+        player1 = self.game_engine.player1
+        p1_text_str = f"{player1.name}: {player1.score}"
+        score_font = pygame.font.Font(None, 40)
+        p1_text = score_font.render(p1_text_str, True, (255, 255, 255))
+        self.screen.blit(p1_text, (self.WIDTH // 2 - p1_text.get_width() // 2, 250))
+
 
         # Draw Button
         for button in self.buttons:
