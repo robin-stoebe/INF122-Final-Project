@@ -49,14 +49,14 @@ class GameEngine:
     def runSuika(self):
         """Run instance of Suika after selecting Suika button"""
         print("Running Suika")
-        suika_game = SuikaGame(self.player1, self.player2)
+        suika_game = SuikaGame(self.player1, self.player2, two_player=True)
         SIZE = WIDTH, HEIGHT = np.array([570, 770])
+        SIZE = (WIDTH * 2 if True else WIDTH, HEIGHT)
         screen = pygame.display.set_mode(SIZE)
         suika_game.run_game_loop(screen, pygame.time.Clock(), 60)
 
-        final_score = suika_game.scoring_system.get_score()
-        self.player1.score = suika_game.player1.score
-        self.player2.score = suika_game.player2.score
+        self.player1.score = suika_game.scoring_p1.get_score()
+        self.player2.score = suika_game.scoring_p2.get_score()
         self.profile_manager.update_profile_score(self.player1.name, self.player1.score)
         self.profile_manager.update_profile_score(self.player2.name, self.player2.score)
         self.profile_manager.save_profiles()

@@ -245,14 +245,14 @@ class SuikaGame(Game):
         """Ends the game immediately if a particle overflows."""
         for p in self.particles_p1:
             if p.pos[1] < PAD[1] and p.has_collided:  # Check if Player 1 loses
-                print(f"Game Over for Player 1! Final Score: {self.scoring_system.get_score()}")
+                print(f"Game Over for Player 1! Final Score: {self.scoring_p1}")
                 self.running = False
                 return True
 
         if self.two_player:
             for p in self.particles_p2:
                 if p.pos[1] < PAD[1] and p.has_collided:  # Check if Player 2 loses
-                    print(f"Game Over for Player 2! Final Score: {self.scoring_system.get_score()}")
+                    print(f"Game Over for Player 2! Final Score: {self.scoring_p2}")
                     self.running = False
                     return True
 
