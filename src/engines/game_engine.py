@@ -71,15 +71,16 @@ class GameEngine:
         #         print("Please enter a valid integer.")
 
     # works with ui > login_screen.py and engines > player.py
-    def set_player(self, player, profile_manager):
+    def set_player(self, player1, player2, profile_manager):
         """Store logged in player's data."""
-        self.player = player
+        self.player1 = player1
+        self.player2 = player2
         self.profile_manager = profile_manager
 
     def runSuika(self):
         """Run instance of Suika after selecting Suika button"""
         print("Running Suika")
-        suika_game = SuikaGame(Player("Bob"), Player("Ava"))
+        suika_game = SuikaGame(self.player1, self.player2)
         SIZE = WIDTH, HEIGHT = np.array([570, 770])
         screen = pygame.display.set_mode(SIZE)
         suika_game.run_game_loop(screen, pygame.time.Clock(), 60)
@@ -88,7 +89,7 @@ class GameEngine:
         """Run instance of Tetris after selecting Suika button"""
         # FIX THIS; lock_piece() index error
         print("Running Tetris")
-        tetris_game = TetrisGame(Player("Bob"), Player("Ava"))
+        tetris_game = TetrisGame(self.player1, self.player2)
         screen = pygame.display.set_mode((tetris_game.board.width * 30, tetris_game.board.height * 30))
         tetris_game.run_game_loop(screen, pygame.time.Clock(), 60)
 
