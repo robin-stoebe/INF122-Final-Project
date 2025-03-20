@@ -306,7 +306,6 @@ class TetrisGame(Game):
             # Outline
             pygame.draw.rect(self.screen, (50, 50, 50), rect, 1)
 
-# Optional: quick test if run directly
 if __name__ == "__main__":
     p1 = Player("Alice")
     p2 = Player("Bob")
