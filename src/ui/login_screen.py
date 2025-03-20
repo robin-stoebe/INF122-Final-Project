@@ -1,5 +1,4 @@
 import pygame
-import os
 from src.engines.profile_manager import ProfileManager
 from src.engines.player import Player
 from .base_screen import BaseScreen
