@@ -56,11 +56,11 @@ class GameEngine:
 
     def runTetris(self):
         """Run instance of Tetris after selecting Suika button"""
-        # FIX THIS; lock_piece() index error
         print("Running Tetris")
         tetris_game = TetrisGame(self.player1, self.player2)
-        screen = pygame.display.set_mode((tetris_game.board.width * 30, tetris_game.board.height * 30))
-        tetris_game.run_game_loop(screen, pygame.time.Clock(), 60)
+        screen = pygame.display.set_mode((tetris_game.board.width * 30 * 2 + 60, tetris_game.board.height * 30))
+        clock = pygame.time.Clock()
+        tetris_game.run_game_loop(screen, clock, 60)
 
     def __repr__(self):
         return f"GameEngine(games={len(self.games)})"
