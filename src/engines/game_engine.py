@@ -79,6 +79,10 @@ class GameEngine:
         print(self.player2.score)
         print(self.profile_manager.profiles)
 
+        pygame.display.set_mode((1200, 800))
+        self.screen_manager.set_screen("main_menu")
+
+
     def __repr__(self):
         return f"GameEngine(games={len(self.games)})"
     

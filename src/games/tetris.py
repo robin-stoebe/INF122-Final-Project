@@ -82,8 +82,7 @@ class TetrisGame(Game):
         self.game_over1 = False
         self.game_over2 = False
 
-        # Optionally create a Pygame window if you want to do real-time rendering:
-        pygame.init()
+        # pygame.init()
         self.screen_width = BOARD_WIDTH * BLOCK_SIZE * 2 + 60
         self.screen_height = BOARD_HEIGHT * BLOCK_SIZE
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))

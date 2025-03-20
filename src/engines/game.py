@@ -32,16 +32,16 @@ class Game(ABC):
                 if event.type == pygame.QUIT:
                     self.running = False
                 else:
-                    self.handle_player_input(event)  # ✅ Calls game-specific input handling
+                    self.handle_player_input(event)  # Calls game-specific input handling
 
-            self.update_board()  # ✅ Calls game-specific board update logic
+            self.update_board()  # Calls game-specific board update logic
             if self.is_game_over():
-                self.running = False  # ✅ Stop if game-over condition is met
+                self.running = False  # Stop if game-over condition is met
 
-            self.render(screen)  # ✅ Calls game rendering
+            self.render(screen)  # Calls game rendering
             clock.tick(fps)
 
-        pygame.quit()
+        # pygame.quit()
         print(f"Game Over! Final Score: {self.scoring_system.get_score()}")
 
     @abstractmethod
