@@ -1,14 +1,8 @@
 import sys
 from src.games.tetris import TetrisGame
 from src.games.suika import SuikaGame
-from src.engines.board import Board
 from src.engines.player import Player
-from src.ui.main_menu_screen import MainMenu
-from src.ui.screen_manager import ScreenManager
-from src.ui.game_selection_screen import GameSelectionScreen
-from src.ui.base_screen import BaseScreen
-from src.ui.login_screen import LoginScreen
-from src.ui.scores_screen import scoresScreen
+from src.engines.profile_manager import ProfileManager
 import pygame
 # import pymunk
 import numpy as np
@@ -20,6 +14,7 @@ class GameEngine:
         self.games = []
         self.timer = 0
         self.screen_manager = screen_manager
+        self.profile_manager = ProfileManager()
         self.player1 = Player()
         self.player2 = Player()
 
@@ -85,23 +80,3 @@ class GameEngine:
 
     def __repr__(self):
         return f"GameEngine(games={len(self.games)})"
-    
-if __name__ == "__main__":
-    screen_manager = ScreenManager()
-    engine = GameEngine(screen_manager)
-
-    # Create screens
-    main_menu = MainMenu(screen_manager, engine)
-    game_selection = GameSelectionScreen(screen_manager, engine)
-    login_screen = LoginScreen(screen_manager, engine)
-    scores = scoresScreen(screen_manager, engine)
-
-    # Add screens to manager
-    screen_manager.add_screen("login", login_screen)
-    screen_manager.add_screen("main_menu", main_menu)
-    screen_manager.add_screen("game_selection", game_selection)
-    screen_manager.add_screen("scores", scores)
-    
-    # Start screen at main menu
-    screen_manager.set_screen("login")
-    screen_manager.run()
