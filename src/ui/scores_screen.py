@@ -13,7 +13,6 @@ class scoresScreen(BaseScreen):
         self.buttons = [
             Button(500, 600, 200, 70, "Back", self.button_font, (200, 40, 40), (220, 70, 70), self.go_back),
         ]
-        self.running = False
 
     def draw(self):
         self.screen.fill((191, 88, 171))  # Background Color

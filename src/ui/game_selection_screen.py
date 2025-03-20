@@ -14,7 +14,6 @@ class GameSelectionScreen(BaseScreen):
             Button(450, 450, 300, 70, "Tetris", self.button_font, (200, 140, 3), (220, 160, 30), self.game_engine.runTetris),
             Button(450, 550, 300, 70, "Back", self.button_font, (200, 40, 40), (220, 70, 70), self.go_back),
         ]
-        self.running = False
 
     def draw(self):
         self.screen.fill((191, 88, 171))  # Background Color
