@@ -20,6 +20,8 @@ class GameEngine:
         self.games = []
         self.timer = 0
         self.screen_manager = screen_manager
+        self.player1 = Player()
+        self.player2 = Player()
 
     def loadScores(self, filename: str):
         """Load a player's scores from a file"""
@@ -59,19 +61,6 @@ class GameEngine:
         tetris_game = TetrisGame(self.player1, self.player2)
         screen = pygame.display.set_mode((tetris_game.board.width * 30, tetris_game.board.height * 30))
         tetris_game.run_game_loop(screen, pygame.time.Clock(), 60)
-
-    def run_game_loop(self, game):
-        """Unified game loop for all games."""
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-                    game.handle_player_input(event)  # passes raw event to games to process
-                    
-            game.update_board()
-            game.render()
 
     def __repr__(self):
         return f"GameEngine(games={len(self.games)})"
