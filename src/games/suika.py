@@ -6,6 +6,7 @@ import random
 from src.engines.game import Game
 from src.engines.board import Board
 from src.engines.player import Player
+from src.engines.scoring_system import ScoringSystem
 
 
 pygame.init()
@@ -39,7 +40,7 @@ THICKNESS = 14
 DENSITY = 0.001
 ELASTICITY = 0.1
 IMPULSE = 10000
-GRAVITY = 2000
+GRAVITY = 6000
 DAMPING = 0.8
 NEXT_DELAY = FPS
 BIAS = 0.00001
@@ -118,7 +119,7 @@ class Wall:
         pygame.draw.line(screen, W_COLOR, self.shape.a, self.shape.b, self.thickness)
 
 
-def resolve_collision(p1, p2, space, particles, mapper):
+def resolve_collision(p1, p2, space, particles, mapper, game):
     if p1.n == p2.n:
         distance = np.linalg.norm(p1.pos - p2.pos)
         if distance < 2 * p1.radius:
@@ -133,13 +134,42 @@ def resolve_collision(p1, p2, space, particles, mapper):
                         impulse = IMPULSE * vector / (distance ** 2)
                         p.body.apply_impulse_at_local_point(tuple(impulse))
                         print(f"{impulse=} was applied to {id(p)}")
+            if game.current_turn == 1:
+                game.scoring_p2.add_score("merge", POINTS[p2.n])
+                print(f"Player 2 Score: {game.scoring_p2.get_score()}")
+            else:
+                game.scoring_p1.add_score("merge", POINTS[p1.n])
+                print(f"Player 1 Score: {game.scoring_p1.get_score()}")
             return pn
+        
+
     return None
+
+def collide(arbiter, space, data):
+    """Handles collisions between particles of the same type."""
+    sh1, sh2 = arbiter.shapes
+    mapper = data["mapper"]
+
+    if sh1 not in mapper or sh2 not in mapper:
+        return True  # Ignore collision if shapes are missing from mapping
+
+    p1, p2 = mapper[sh1], mapper[sh2]
+
+    if p1.n != p2.n:
+        return True  # Do nothing if they are different sizes
+
+    # Merge particles
+    merged_particle = resolve_collision(p1, p2, space, data["particles"], mapper, data["game"])
+
+    if merged_particle:
+        data["particles"].append(merged_particle)
+
+    return False
 
 
 class SuikaGame(Game):
     """Suika Game using TMGE"""
-    def __init__(self, player1, player2):
+    def __init__(self, player1, player2, two_player=True):
         super().__init__(WIDTH, HEIGHT, player1, player2, scoring_rules={"merge": 1})
         pygame.init()
 
@@ -148,113 +178,160 @@ class SuikaGame(Game):
         self.space.gravity = (0, GRAVITY)
         self.space.damping = DAMPING
         self.space.collision_bias = BIAS
+        self.two_player = two_player  
+        self.scoring_p1 = ScoringSystem(scoring_rules={"merge": 1}) 
+        self.scoring_p2 = ScoringSystem(scoring_rules={"merge": 1})
 
-        # Ensure the board is the original Suika size
-        self.board_width = WIDTH
-        self.board_height = HEIGHT
+        # Track which player's turn it is
+        self.current_turn = 1  # Player 1 starts first
 
-        # Create game walls with  dimensions
-        self.walls = [
-            Wall(A, B, self.space),
-            Wall(B, C, self.space),
-            Wall(C, D, self.space)
+        # Create game walls
+        self.walls_p1 = [
+            Wall(A, B, self.space),  # Left border
+            Wall(B, C, self.space),  # Bottom border
+            Wall(C, D, self.space)   # Right border
         ]
 
-        # Game data structures
+        if self.two_player:
+            self.walls_p2 = [
+                Wall((A[0] + WIDTH, A[1]), (B[0] + WIDTH, B[1]), self.space), 
+                Wall((B[0] + WIDTH, B[1]), (C[0] + WIDTH, C[1]), self.space), 
+                Wall((C[0] + WIDTH, C[1]), (D[0] + WIDTH, D[1]), self.space)   
+            ]
+            # Add a center wall to separate players
+            center_x = WIDTH
+            self.walls_p1.append(Wall((center_x, PAD[1]), (center_x, HEIGHT - PAD[0]), self.space))
+            self.walls_p2.append(Wall((center_x, PAD[1]), (center_x, HEIGHT - PAD[0]), self.space))
+
+        # Separate lists for particles
         self.shape_to_particle = {}
-        self.particles = []
+        self.particles_p1 = []
+        self.particles_p2 = []
         self.wait_for_next = 0
-        self.next_particle = PreParticle(WIDTH // 2, rng.integers(0, 5))  # ✅ Preview piece follows mouse
 
-        # Collision Handler
+        # Only one preview piece is needed
+        self.next_particle = PreParticle(WIDTH // 4, rng.integers(0, 5))
+
+        # Attach collision handler AFTER defining shape_to_particle
         handler = self.space.add_collision_handler(1, 1)
-        handler.begin = self.collide
-        handler.data["particles"] = self.particles
+        handler.begin = collide  # Correct function reference
         handler.data["mapper"] = self.shape_to_particle
+        handler.data["particles"] = self.particles_p1
+        if self.two_player:
+            handler.data["particles"] += self.particles_p2
+        handler.data["game"] = self
 
-    def collide(self, arbiter, space, data):
-        """Handles particle merging logic upon collision."""
-        sh1, sh2 = arbiter.shapes
-        p1, p2 = self.shape_to_particle[sh1], self.shape_to_particle[sh2]
-
-        if p1.n == p2.n:  # Only merge if the particles are the same
-            p1.kill(space)
-            p2.kill(space)
-
-            # Create a new merged particle at collision location
-            merged_particle = Particle(np.mean([p1.pos, p2.pos], axis=0), p1.n + 1, space, self.shape_to_particle)
-            self.particles.append(merged_particle)
-
-            # Update score
-            self.scoring_system.add_score("merge", POINTS[p1.n])
 
     def update_board(self):
         """Handles physics updates and checks for new particle spawning."""
-        self.space.step(1 / FPS)
+        self.space.step(1 / FPS)  # Update physics simulation
 
         if self.wait_for_next > 1:
             self.wait_for_next -= 1
         elif self.wait_for_next == 1:
-            self.next_particle = PreParticle(self.next_particle.x, rng.integers(0, 5))
-            self.wait_for_next -= 1
+            # Only spawn a new preview piece if it is None
+            if self.next_particle is None:
+                if self.current_turn == 1:
+                    self.next_particle = PreParticle(WIDTH // 4, rng.integers(0, 5))  # Player 1's preview
+                else:
+                    self.next_particle = PreParticle(WIDTH + WIDTH // 4, rng.integers(0, 5))  # Player 2's preview
+
+            self.wait_for_next -= 1  # Reset delay
+
+        if self.is_game_over():
+            self.running = False  # Stop the game loop when one player loses
 
     def is_game_over(self):
         """Ends the game immediately if a particle overflows."""
-        for p in self.particles:
-            if p.pos[1] < PAD[1] and p.has_collided:  # Check if a particle collides at the top
-                print(f"Game Over! Final Score: {self.scoring_system.get_score()}")
+        for p in self.particles_p1:
+            if p.pos[1] < PAD[1] and p.has_collided:  # Check if Player 1 loses
+                print(f"Game Over for Player 1! Final Score: {self.scoring_system.get_score()}")
                 self.running = False
                 return True
-        return False
+
+        if self.two_player:
+            for p in self.particles_p2:
+                if p.pos[1] < PAD[1] and p.has_collided:  # Check if Player 2 loses
+                    print(f"Game Over for Player 2! Final Score: {self.scoring_system.get_score()}")
+                    self.running = False
+                    return True
+
+        return False  # No player has lost yet
 
     def handle_player_input(self, event):
-        """Handles movement of the next particle and releasing it."""
-        if event.type == pygame.MOUSEMOTION:
-            self.next_particle.set_x(event.pos[0])  # Move preview piece with mouse
+        """Handles mouse-based input for turn-based dropping of pieces."""
 
-        if event.type == pygame.KEYDOWN:
-            if event.key in [pygame.K_LEFT, pygame.K_RIGHT]:
-                move_amount = -10 if event.key == pygame.K_LEFT else 10
-                self.next_particle.set_x(self.next_particle.x + move_amount)  # Allow arrow keys to move preview piece
+        if event.type == pygame.MOUSEMOTION and self.next_particle:
+            mouse_x, _ = event.pos
 
-            elif event.key in [pygame.K_RETURN, pygame.K_SPACE] and self.wait_for_next == 0:
-                # Release the particle and start countdown for the next one
-                self.particles.append(self.next_particle.release(self.space, self.shape_to_particle))
-                self.wait_for_next = NEXT_DELAY
+            if self.current_turn == 1:
+                # Player 1's preview orb moves inside their board
+                self.next_particle.set_x(np.clip(mouse_x, PAD[0], WIDTH - PAD[0]))
+            elif self.current_turn == 2:
+                # Player 2's preview orb moves inside their board
+                self.next_particle.set_x(np.clip(mouse_x - WIDTH, PAD[0], WIDTH - PAD[0]))  
+                self.next_particle.x += WIDTH
 
-        if event.type == pygame.MOUSEBUTTONDOWN and self.wait_for_next == 0:
-            self.particles.append(self.next_particle.release(self.space, self.shape_to_particle))
-            self.wait_for_next = NEXT_DELAY  # Allow mouse click to release piece
+        if event.type == pygame.MOUSEBUTTONDOWN and self.wait_for_next == 0 and self.next_particle:
+            if self.current_turn == 1:
+                # Drop Player 1's piece inside left board
+                self.particles_p1.append(self.next_particle.release(self.space, self.shape_to_particle))
+            else:
+                # Drop Player 2's piece inside right board
+                self.particles_p2.append(self.next_particle.release(self.space, self.shape_to_particle))
+
+
+            self.wait_for_next = NEXT_DELAY  # Add delay before next piece spawns
+            self.next_particle = None  # 🚀 Prevent immediate preview spawning
+
+            # Switch player AFTER dropping
+            self.current_turn = 1 if self.current_turn == 2 else 2
+
+            # Ensure the next particle is spawned in the correct location
+            if self.current_turn == 1:
+                self.next_particle = PreParticle(WIDTH // 4, rng.integers(0, 5))  # Player 1's side
+            else:
+                self.next_particle = PreParticle(WIDTH + (WIDTH // 4), rng.integers(0, 5))  # Player 2's side
 
     def render(self, screen):
         """Draws all game elements on screen with the correct original board size."""
         screen.fill(BG_COLOR)
 
-        # Draw game walls
-        for wall in self.walls:
+        # Draw walls
+        for wall in self.walls_p1:
             wall.draw(screen)
+        if self.two_player:
+            for wall in self.walls_p2:
+                wall.draw(screen)
 
-        # Draw all particles
-        for p in self.particles:
+        # Draw Player 1's particles
+        for p in self.particles_p1:
+            p.draw(screen)
+        # Draw Player 2's particles
+        for p in self.particles_p2:
             p.draw(screen)
 
-        # Draw next particle preview at mouse position
-        if self.wait_for_next == 0:
+        # Only draw the preview for the active player IF IT EXISTS
+        if self.next_particle:
             self.next_particle.draw(screen)
 
-        # Display Score
-        font = pygame.font.Font(None, 36)
-        score_text = font.render(f"Score: {self.scoring_system.get_score()}", True, (0, 0, 0))
-        screen.blit(score_text, (10, 10))
+        font = pygame.font.SysFont("monospace", 32)
+        label_p1 = font.render(f"Player 1 Score: {self.scoring_p1.get_score()}", 1, (0, 0, 0))
+        label_p2 = font.render(f"Player 2 Score: {self.scoring_p2.get_score()}", 1, (0, 0, 0))
+
+        screen.blit(label_p1, (10, 10))  # Player 1's score in top-left
+        if self.two_player:
+            screen.blit(label_p2, (WIDTH + 10, 10))  # Player 2's score in top-right
 
         pygame.display.flip()
 
     # RUN "python -m src.engines.game_engine" to run the game - Wilson
 # def main():
-#     game = SuikaGame(None, None)
+#     two_player = True
+#     suika_game = SuikaGame(Player("Bob"), Player("Ava"), two_player=two_player)
+#     SIZE = (WIDTH * 2 if two_player else WIDTH, HEIGHT)
 #     screen = pygame.display.set_mode(SIZE)
-#     clock = pygame.time.Clock()
-#     game.run_game_loop(screen, clock, FPS)
+#     suika_game.run_game_loop(screen, pygame.time.Clock(), 60)
 
 # if __name__ == "__main__":
 #     main()
