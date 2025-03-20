@@ -75,6 +75,9 @@ class GameEngine:
         self.profile_manager.update_profile_score(self.player1.name, self.player1.score)
         self.profile_manager.update_profile_score(self.player2.name, self.player2.score)
         self.profile_manager.save_profiles()
+        print(self.player1.score)
+        print(self.player2.score)
+        print(self.profile_manager.profiles)
 
     def __repr__(self):
         return f"GameEngine(games={len(self.games)})"
